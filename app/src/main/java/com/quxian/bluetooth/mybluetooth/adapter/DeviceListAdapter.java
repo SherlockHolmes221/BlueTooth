@@ -18,6 +18,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+/*
+显示4个信息
+name address rssi beacon
+ */
 
 public class DeviceListAdapter extends BaseAdapter implements Comparator<SearchResult> {
 
@@ -98,6 +102,7 @@ public class DeviceListAdapter extends BaseAdapter implements Comparator<SearchR
                 Intent intent = new Intent();
                 intent.setClass(mContext, DeviceDetailActivity.class);
                 intent.putExtra("mac", result.getAddress());
+                //intent.putExtra("device", result);
                 mContext.startActivity(intent);
             }
         });

@@ -4,12 +4,14 @@ import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.inuker.bluetooth.library.BluetoothClient;
 import com.inuker.bluetooth.library.connect.listener.BleConnectStatusListener;
 import com.inuker.bluetooth.library.connect.options.BleConnectOptions;
 import com.inuker.bluetooth.library.connect.response.BleConnectResponse;
@@ -20,16 +22,12 @@ import com.inuker.bluetooth.library.utils.BluetoothUtils;
 import com.quxian.bluetooth.mybluetooth.R;
 import com.quxian.bluetooth.mybluetooth.adapter.DeviceDetailAdapter;
 import com.quxian.bluetooth.mybluetooth.bean.DetailItem;
-import com.quxian.bluetooth.mybluetooth.utils.ClientManager;
 
 import java.util.UUID;
 
 import static com.inuker.bluetooth.library.Constants.REQUEST_SUCCESS;
 import static com.inuker.bluetooth.library.Constants.STATUS_CONNECTED;
 
-/**
- * Created by dingjikerbo on 2016/9/2.
- */
 public class DeviceDetailActivity extends Activity {
 
     private TextView mTvTitle;
@@ -43,15 +41,18 @@ public class DeviceDetailActivity extends Activity {
     private BluetoothDevice mDevice;
 
     private boolean mConnected;
+    private BluetoothClient mClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.device_detail_activity);
 
+        mClient = new BluetoothClient(this);
         Intent intent = getIntent();
         String mac = intent.getStringExtra("mac");
-        mResult = intent.getParcelableExtra("device");
+        Log.e("mac",mac);
+       // mResult = intent.getParcelableExtra("device");
 
         mDevice = BluetoothUtils.getRemoteDevice(mac);
 
@@ -78,7 +79,7 @@ public class DeviceDetailActivity extends Activity {
             }
         });
 
-        ClientManager.getClient().registerConnectStatusListener(mDevice.getAddress(), mConnectStatusListener);
+        mClient.registerConnectStatusListener(mDevice.getAddress(), mConnectStatusListener);
 
         connectDeviceIfNeeded();
     }
@@ -102,6 +103,7 @@ public class DeviceDetailActivity extends Activity {
         startActivity(intent);
     }
 
+    //连接设备并且显示
     private void connectDevice() {
         mTvTitle.setText(String.format("%s%s", getString(R.string.connecting), mDevice.getAddress()));
         mPbar.setVisibility(View.VISIBLE);
@@ -114,7 +116,7 @@ public class DeviceDetailActivity extends Activity {
                 .setServiceDiscoverTimeout(10000)
                 .build();
 
-        ClientManager.getClient().connect(mDevice.getAddress(), options, new BleConnectResponse() {
+        mClient.connect(mDevice.getAddress(), options, new BleConnectResponse() {
             @Override
             public void onResponse(int code, BleGattProfile profile) {
                 BluetoothLog.v(String.format("profile:\n%s", profile));
@@ -122,6 +124,7 @@ public class DeviceDetailActivity extends Activity {
                 mPbar.setVisibility(View.GONE);
                 mListView.setVisibility(View.VISIBLE);
 
+                //在adapter添加数据
                 if (code == REQUEST_SUCCESS) {
                     mAdapter.setGattProfile(profile);
                 }
@@ -137,8 +140,8 @@ public class DeviceDetailActivity extends Activity {
 
     @Override
     protected void onDestroy() {
-        ClientManager.getClient().disconnect(mDevice.getAddress());
-        ClientManager.getClient().unregisterConnectStatusListener(mDevice.getAddress(), mConnectStatusListener);
+        mClient.disconnect(mDevice.getAddress());
+        mClient.unregisterConnectStatusListener(mDevice.getAddress(), mConnectStatusListener);
         super.onDestroy();
     }
 }

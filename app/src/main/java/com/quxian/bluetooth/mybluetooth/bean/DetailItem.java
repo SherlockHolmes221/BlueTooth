@@ -2,6 +2,9 @@ package com.quxian.bluetooth.mybluetooth.bean;
 
 import java.util.UUID;
 
+/*
+
+ */
 public class DetailItem {
 
     public static final int TYPE_SERVICE = 0;
